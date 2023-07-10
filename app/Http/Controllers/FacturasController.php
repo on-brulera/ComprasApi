@@ -5,14 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\Facturas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class FacturasController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['index', 'show']]);
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $facturasConDetalles = Facturas::with('detalles')->get();
         return response()->json(['message' => 'Consulta Exitosa', 'data' => $facturasConDetalles]);
     }
@@ -22,6 +34,11 @@ class FacturasController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         // Validar los datos de la factura y los detalles
         $validator = Validator::make($request->all(), [
             'proveedor_id' => 'required|exists:proveedores,id',
@@ -72,6 +89,11 @@ class FacturasController extends Controller
      */
     public function show($id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $facturaConDetalles = Facturas::with('detalles')->find($id);
         if ($facturaConDetalles == null) {
             return response()->json(['message' => 'no existe una factura con ese id'], 400);
@@ -84,6 +106,11 @@ class FacturasController extends Controller
      */
     public function update(Request $request, Facturas $facturas)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         // Validar los datos de la factura y los detalles
         $validator = Validator::make($request->all(), [
             'proveedor_id' => 'required|exists:proveedores,id',
@@ -141,6 +168,11 @@ class FacturasController extends Controller
      */
     public function destroy($id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $factura = Facturas::find($id);
 
         if (!$factura) {
@@ -153,6 +185,11 @@ class FacturasController extends Controller
 
     public function cambiarImpreso($id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $factura = Facturas::find($id);
         if ($factura == null) {
             return response()->json(['message' => 'Factura no encontrada'], 404);

@@ -4,14 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Models\DetalleFacturas;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DetalleFacturasController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['index', 'show']]);
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $detallesConFactura = DetalleFacturas::with('factura')->get();
         return response()->json(['message' => 'Consulta Exitosa', 'data' => $detallesConFactura]);
     }
@@ -29,7 +41,12 @@ class DetalleFacturasController extends Controller
      */
     public function show($id)
     {
-        $detallesFactura = DetalleFacturas::with('factura')->where('producto_id', $id)->get();        
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $detallesFactura = DetalleFacturas::with('factura')->where('producto_id', $id)->get();
         return response()->json(['message' => 'Consulta exitosa', 'data' => $detallesFactura]);
     }
 

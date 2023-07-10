@@ -4,14 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Models\Proveedores;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProveedoresController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['index', 'show']]);
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $proveedores = Proveedores::all();
         if ($proveedores->isEmpty()) {
             return response()->noContent();
@@ -24,6 +36,11 @@ class ProveedoresController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $existingProveedor = Proveedores::where('documento_identificacion', $request->documento_identificacion)->exists();
         if ($existingProveedor) {
             return response()->json(['message' => 'Ya existe un proveedor con ese documento de identificacion'], 400);
@@ -44,6 +61,10 @@ class ProveedoresController extends Controller
      */
     public function show($id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
 
         $proveedores = Proveedores::find($id);
         if ($proveedores == null) {
@@ -56,7 +77,12 @@ class ProveedoresController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, Proveedores $proveedores)
-    {        
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $documentoIdentificacion = $request->documento_identificacion;
 
         if ($documentoIdentificacion !== $proveedores->documento_identificacion) {
@@ -91,6 +117,11 @@ class ProveedoresController extends Controller
      */
     public function destroy($id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $proveedor = Proveedores::find($id);
         if ($proveedor == null) {
             return response()->json(['message' => 'Proveedor no encontrado'], 404);
