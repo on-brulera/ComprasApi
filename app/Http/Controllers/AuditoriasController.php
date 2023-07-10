@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Audiorias;
+use App\Models\Auditorias;
 use Illuminate\Http\Request;
 
-class AudioriasController extends Controller
+class AuditoriasController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -26,7 +26,7 @@ class AudioriasController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Audiorias $audiorias)
+    public function show(Auditorias $auditorias)
     {
         //
     }
@@ -34,7 +34,7 @@ class AudioriasController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Audiorias $audiorias)
+    public function update(Request $request, Auditorias $auditorias)
     {
         //
     }
@@ -42,7 +42,7 @@ class AudioriasController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Audiorias $audiorias)
+    public function destroy(Auditorias $auditorias)
     {
         //
     }
