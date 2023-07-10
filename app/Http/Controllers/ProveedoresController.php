@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Proveedores;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Auditorias;
 
 class ProveedoresController extends Controller
 {
@@ -28,6 +29,10 @@ class ProveedoresController extends Controller
         if ($proveedores->isEmpty()) {
             return response()->noContent();
         }
+
+        // Registrar la auditoría
+        $this->registrarAuditoria($user->email, 'Get', 'Compras', 'Consulta de proveedores', 'Total Proveedores: ' . $proveedores->count());
+
         return response()->json(['message' => 'consulta exitosa', 'data' => $proveedores]);
     }
 
@@ -53,6 +58,10 @@ class ProveedoresController extends Controller
 
         $proveedor = $this->obtenerDatos($request);
         $proveedor->save();
+
+        // Registrar la auditoría
+        $this->registrarAuditoria($user->email, 'Post', 'Compras', 'Registrar un Proveedor', 'La identificación del proveedor es: ' . $request->documento_identificacion);
+
         return response()->json(['message' => 'Proveedor Creado Exitosamente', 'data' => $proveedor], 201);
     }
 
@@ -70,6 +79,10 @@ class ProveedoresController extends Controller
         if ($proveedores == null) {
             return response()->json(['message' => 'Proveedor no encontrado'], 400);
         }
+
+        // Registrar la auditoría
+        $this->registrarAuditoria($user->email, 'Get', 'Compras', 'Consulta de un Proveedor', 'La identificación del proveedor es: ' . $proveedores->documento_identificacion);
+
         return response()->json(['message' => 'Consulta existosa', 'data' => $proveedores]);
     }
 
@@ -106,6 +119,10 @@ class ProveedoresController extends Controller
 
         if ($updated) {
             $statusCode = $proveedores->wasRecentlyCreated ? 201 : 200;
+
+            // Registrar la auditoría
+            $this->registrarAuditoria($user->email, "Update", 'Compras', 'Actualizar un Proveedor', 'La identificación del proveedor es: ' . $request->documento_identificacion);
+
             return response(['message' => 'Proveedor Actualizado Exitosamente', 'data' => $proveedores], $statusCode);
         } else {
             return response()->json(['message' => 'No se pudo actualizar el proveedor'], 409);
@@ -127,6 +144,9 @@ class ProveedoresController extends Controller
             return response()->json(['message' => 'Proveedor no encontrado'], 404);
         }
         $proveedor->delete();
+        // Registrar la auditoría
+        $this->registrarAuditoria($user->email, "Update", 'Compras', 'Actualizar un Proveedor', 'La identificación del proveedor es: ' . $proveedor->documento_identificacion);
+
         return response()->json(['message' => 'Proveedor eliminado exitosamente', 'data' => $proveedor]);
     }
 
@@ -135,6 +155,7 @@ class ProveedoresController extends Controller
         if ($proveedores == null) {
             $proveedores = new Proveedores;
         }
+
         $proveedores->documento_identificacion = $request->documento_identificacion;
         $proveedores->nombre = $request->nombre;
         $proveedores->ciudad = $request->ciudad;
@@ -144,5 +165,20 @@ class ProveedoresController extends Controller
         $proveedores->email = $request->email;
         $proveedores->estado = $request->estado;
         return $proveedores;
+    }
+
+    /**
+     * Registrar una entrada en la tabla de auditoría.
+     */
+    private function registrarAuditoria($usuario, $accion, $modulo, $funcionalidad, $observacion)
+    {
+        Auditorias::create([
+            'aud_usuario' => $usuario,
+            'aud_fecha' => now(),
+            'aud_accion' => $accion,
+            'aud_modulo' => $modulo,
+            'aud_funcionalidad' => $funcionalidad,
+            'aud_observacion' => $observacion,
+        ]);
     }
 }

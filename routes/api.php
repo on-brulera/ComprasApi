@@ -48,3 +48,6 @@ Route::put('/facturaestado/{facturas}', 'App\Http\Controllers\FacturasController
 
 Route::get('/detalles', 'App\Http\Controllers\DetalleFacturasController@index');
 Route::get('/detalles/{id}', 'App\Http\Controllers\DetalleFacturasController@show');
+
+#PARA AUDITORIA
+Route::get('/auditoria', 'App\Http\Controllers\AuditoriasController@index');
