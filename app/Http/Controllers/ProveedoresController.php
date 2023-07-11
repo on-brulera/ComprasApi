@@ -6,6 +6,7 @@ use App\Models\Proveedores;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Auditorias;
+use App\Http\Controllers\API\AuthController;
 
 class ProveedoresController extends Controller
 {
@@ -144,6 +145,7 @@ class ProveedoresController extends Controller
             return response()->json(['message' => 'Proveedor no encontrado'], 404);
         }
         $proveedor->delete();
+        
         // Registrar la auditoría
         $this->registrarAuditoria($user->email, "Update", 'Compras', 'Actualizar un Proveedor', 'La identificación del proveedor es: ' . $proveedor->documento_identificacion);
 

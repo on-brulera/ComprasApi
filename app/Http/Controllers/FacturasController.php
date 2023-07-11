@@ -6,6 +6,7 @@ use App\Models\Facturas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Auditorias;
 
 class FacturasController extends Controller
 {
@@ -26,6 +27,10 @@ class FacturasController extends Controller
         }
 
         $facturasConDetalles = Facturas::with('detalles')->get();
+
+        // Registrar la auditoría
+        $this->registrarAuditoria($user->email, "Get", 'Compras', 'Obtener facturas', 'Número Total Facturas: ' . $facturasConDetalles->count());
+
         return response()->json(['message' => 'Consulta Exitosa', 'data' => $facturasConDetalles]);
     }
 
@@ -80,6 +85,9 @@ class FacturasController extends Controller
             ]);
         }
 
+        // Registrar la auditoría
+        $this->registrarAuditoria($user->email, "Post", 'Compras', 'Crear facturas', 'Total Factura : ' . $request->total . '. Tipos Productos ' . count($request->detalles));
+
         // Devolver la respuesta con la factura y los detalles creados
         return response()->json(['message' => 'Factura creada exitosamente', 'data' => $factura->load('detalles')], 201);
     }
@@ -98,6 +106,10 @@ class FacturasController extends Controller
         if ($facturaConDetalles == null) {
             return response()->json(['message' => 'no existe una factura con ese id'], 400);
         }
+
+        // Registrar la auditoría
+        $this->registrarAuditoria($user->email, "Get", 'Compras', 'Obtener factura', 'Total Factura : ' . $facturaConDetalles->total . '. Tipos Productos ' . count($facturaConDetalles->detalles));
+
         return response()->json(['message' => 'Consulta exitosa', 'data' => $facturaConDetalles]);
     }
 
@@ -158,6 +170,9 @@ class FacturasController extends Controller
             ]);
         }
 
+        // Registrar la auditoría
+        $this->registrarAuditoria($user->email, "Put", 'Compras', 'Actualizar factura', 'Total Factura : ' . $request->total . '. Tipos Productos ' . count($request->detalles));
+
         // Devolver la respuesta con la factura y los detalles actualizados
         return response()->json(['message' => 'Factura actualizada exitosamente', 'data' => $facturas->load('detalles')]);
 
@@ -180,6 +195,10 @@ class FacturasController extends Controller
         }
         $factura->detalles()->delete();
         $factura->delete();
+
+        // Registrar la auditoría
+        $this->registrarAuditoria($user->email, "Delete", 'Compras', 'Eliminar factura', 'Id Factura : ' . $id);
+
         return response()->json(['message' => 'Factura eliminada correctamente'], 200);
     }
 
@@ -196,6 +215,26 @@ class FacturasController extends Controller
         }
         $factura->impreso = !$factura->impreso;
         $factura->save();
+
+        // Registrar la auditoría
+        $this->registrarAuditoria($user->email, "Post", 'Compras', 'Cambiar Estado PDF', 'Id Factura : ' . $id . '. Factura Descargada: ' . $factura->impreso);
+
         return response()->json(['message' => 'Campo actualizado correctamente']);
+    }
+
+
+    /**
+     * Registrar una entrada en la tabla de auditoría.
+     */
+    private function registrarAuditoria($usuario, $accion, $modulo, $funcionalidad, $observacion)
+    {
+        Auditorias::create([
+            'aud_usuario' => $usuario,
+            'aud_fecha' => now(),
+            'aud_accion' => $accion,
+            'aud_modulo' => $modulo,
+            'aud_funcionalidad' => $funcionalidad,
+            'aud_observacion' => $observacion,
+        ]);
     }
 }

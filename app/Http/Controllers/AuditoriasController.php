@@ -65,4 +65,19 @@ class AuditoriasController extends Controller
     {
         //
     }
+
+    /**
+     * Registrar una entrada en la tabla de auditoría.
+     */
+    private function registrarAuditoria($usuario, $accion, $modulo, $funcionalidad, $observacion)
+    {
+        Auditorias::create([
+            'aud_usuario' => $usuario,
+            'aud_fecha' => now(),
+            'aud_accion' => $accion,
+            'aud_modulo' => $modulo,
+            'aud_funcionalidad' => $funcionalidad,
+            'aud_observacion' => $observacion,
+        ]);
+    }
 }
