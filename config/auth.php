@@ -44,6 +44,7 @@ return [
         'api' => [
             'driver' => 'jwt',
             'provider' => 'users',
+            'ttl' => 720,  // Duración del token en minutos (12 horas)
         ],
     ],
 
