@@ -28,6 +28,7 @@ Route::post('/refresh', 'App\Http\Controllers\API\AuthController@refresh');
 Route::resource('proveedores', ProveedoresController::class);
 Route::post('/proveedor', 'App\Http\Controllers\ProveedoresController@store');
 Route::put('/proveedor/{proveedores}', 'App\Http\Controllers\ProveedoresController@update');
+Route::post('/proveedor/estado/{id}', 'App\Http\Controllers\ProveedoresController@cambiarEstadoProveedor');
 
 #FACTURAS
 
@@ -36,7 +37,7 @@ Route::get('/factura/{id}', 'App\Http\Controllers\FacturasController@show');
 Route::post('/factura', 'App\Http\Controllers\FacturasController@store');
 Route::delete('/factura/{id}', 'App\Http\Controllers\FacturasController@destroy');
 Route::put('/factura/{facturas}', 'App\Http\Controllers\FacturasController@update');
-Route::put('/facturaestado/{facturas}', 'App\Http\Controllers\FacturasController@cambiarImpreso');
+Route::post('/factura/estado/{id}', 'App\Http\Controllers\FacturasController@cambiarEstadoFactura');
 
 #DETALLES para Franco
 

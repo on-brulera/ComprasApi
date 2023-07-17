@@ -42,7 +42,6 @@ class FacturasController extends Controller
                 'fecha_vencimiento' => 'nullable|date',
                 'total' => 'required|numeric',
                 'estado' => 'required|in:Activo,Inactivo',
-                'impreso' => 'nullable|boolean',
                 'detalles.*.cantidad' => 'required|integer|min:0',
                 'detalles.*.subtotal' => 'required|numeric',
                 'detalles.*.total' => 'required|numeric',
@@ -58,7 +57,6 @@ class FacturasController extends Controller
                 'fecha_vencimiento' => ($request->tipo_pago === 'Crédito') ? $request->fecha_vencimiento : null,
                 'total' => $request->total,
                 'estado' => $request->estado,
-                'impreso' => $request->impreso,
             ]);
             $factura->save();
             // Crear los detalles de la factura y guardarlos en la base de datos
@@ -111,15 +109,11 @@ class FacturasController extends Controller
                 'fecha_vencimiento' => 'nullable|date',
                 'total' => 'required|numeric',
                 'estado' => 'required|in:Activo,Inactivo',
-                'impreso' => 'nullable|boolean',
                 'detalles.*.cantidad' => 'required|integer',
                 'detalles.*.subtotal' => 'required|numeric',
                 'detalles.*.total' => 'required|numeric',
             ]);
 
-            if ($facturas->impreso) {
-                return response()->json(['message' => 'No se puede actualizar una factura impresa'], 400);
-            }
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 400);
             }
@@ -131,7 +125,6 @@ class FacturasController extends Controller
             $facturas->fecha_vencimiento = ($request->tipo_pago === 'Crédito') ? $request->fecha_vencimiento : null;
             $facturas->total = $request->total;
             $facturas->estado = $request->estado;
-            $facturas->impreso = $request->impreso;
             $facturas->save();
             // Eliminar los detalles antiguos de la factura
             $facturas->detalles()->delete();
@@ -168,24 +161,6 @@ class FacturasController extends Controller
             // Registrar la auditoría
             $this->registrarAuditoria($user->email, "Delete", 'Compras', 'Eliminar factura', 'Id Factura : ' . $id);
             return response()->json(['message' => 'Factura eliminada correctamente'], 200);
-        } catch (AuthorizationException $e) {
-            return response()->json(['message' => $e->getMessage()], 401);
-        }
-    }
-
-    public function cambiarImpreso(Request $request, $id)
-    {
-        try {
-            $user = $this->verificarToken($request);
-            $factura = Facturas::find($id);
-            if ($factura == null) {
-                return response()->json(['message' => 'Factura no encontrada'], 404);
-            }
-            $factura->impreso = !$factura->impreso;
-            $factura->save();
-            // Registrar la auditoría
-            $this->registrarAuditoria($user->email, "Post", 'Compras', 'Cambiar Estado PDF', 'Id Factura : ' . $id . '. Factura Descargada: ' . $factura->impreso);
-            return response()->json(['message' => 'Campo actualizado correctamente']);
         } catch (AuthorizationException $e) {
             return response()->json(['message' => $e->getMessage()], 401);
         }

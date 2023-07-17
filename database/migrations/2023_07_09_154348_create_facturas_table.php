@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('fecha_vencimiento')->nullable();
             $table->double('total'); 
             $table->string('estado');
-            $table->boolean('impreso')->nullable()->default(false);
+            // $table->boolean('impreso')->nullable()->default(false);
         });
     }
 
