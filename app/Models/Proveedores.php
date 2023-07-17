@@ -19,4 +19,9 @@ class Proveedores extends Model
         'estado',
     ];
     public $timestamps = false;
+
+    public function facturas()
+    {
+        return $this->hasMany(Facturas::class, 'proveedor_id');
+    }
 }

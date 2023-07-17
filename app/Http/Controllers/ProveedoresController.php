@@ -3,33 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Proveedores;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Auditorias;
-use App\Http\Controllers\API\AuthController;
+use Illuminate\Support\Facades\Validator;
 
 class ProveedoresController extends Controller
-{    
+{
 
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+        try {
+            $user = $this->verificarToken($request);
+            $proveedores = Proveedores::all();
+            if ($proveedores->isEmpty()) {
+                return response()->noContent();
+            }
+            // Registrar la auditoría
+            $this->registrarAuditoria($user->email, 'Get', 'Compras', 'Consulta de proveedores', 'Total Proveedores: ' . $proveedores->count());
+            return response()->json(['message' => 'consulta exitosa', 'data' => $proveedores]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['message' => $e->getMessage()], 401);
         }
-
-        $proveedores = Proveedores::all();
-        if ($proveedores->isEmpty()) {
-            return response()->noContent();
-        }
-
-        // Registrar la auditoría
-        $this->registrarAuditoria($user->email, 'Get', 'Compras', 'Consulta de proveedores', 'Total Proveedores: ' . $proveedores->count());
-
-        return response()->json(['message' => 'consulta exitosa', 'data' => $proveedores]);
     }
 
     /**
@@ -37,49 +36,50 @@ class ProveedoresController extends Controller
      */
     public function store(Request $request)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+        try {
+            $user = $this->verificarToken($request);
+
+            $validator = Validator::make($request->all(), [
+                'documento_identificacion' => 'required|string|unique:proveedores,documento_identificacion',
+                'nombre' => 'required|string',
+                'ciudad' => 'required|string',
+                'tipo_proveedor' => 'required|string|in:Contado,Crédito',
+                'direccion' => 'nullable|string',
+                'telefono' => 'required|string',
+                'email' => 'required|string|unique:proveedores,email',
+                'estado' => 'required|string|in:Activo,Inactivo',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['message' => $validator->errors()->first()], 400);
+            }
+            $proveedor = $this->obtenerDatos($request);
+            $proveedor->save();
+            // Registrar la auditoría
+            $this->registrarAuditoria($user->email, 'Post', 'Compras', 'Registrar un Proveedor', 'La identificación del proveedor es: ' . $request->documento_identificacion);
+            return response()->json(['message' => 'Proveedor Creado Exitosamente', 'data' => $proveedor], 201);
+        } catch (AuthorizationException $e) {
+            return response()->json(['message' => $e->getMessage()], 401);
         }
-
-        $existingProveedor = Proveedores::where('documento_identificacion', $request->documento_identificacion)->exists();
-        if ($existingProveedor) {
-            return response()->json(['message' => 'Ya existe un proveedor con ese documento de identificacion'], 400);
-        }
-
-        $existingEmail = Proveedores::where('email', $request->email)->exists();
-        if ($existingEmail) {
-            return response()->json(['message' => 'Ya existe un proveedor con ese email'], 400);
-        }
-
-        $proveedor = $this->obtenerDatos($request);
-        $proveedor->save();
-
-        // Registrar la auditoría
-        $this->registrarAuditoria($user->email, 'Post', 'Compras', 'Registrar un Proveedor', 'La identificación del proveedor es: ' . $request->documento_identificacion);
-
-        return response()->json(['message' => 'Proveedor Creado Exitosamente', 'data' => $proveedor], 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+        try {
+            $user = $this->verificarToken($request);
+            $proveedores = Proveedores::find($id);
+            if ($proveedores == null) {
+                return response()->json(['message' => 'Proveedor no encontrado'], 400);
+            }
+            // Registrar la auditoría
+            $this->registrarAuditoria($user->email, 'Get', 'Compras', 'Consulta de un Proveedor', 'La identificación del proveedor es: ' . $proveedores->documento_identificacion);
+            return response()->json(['message' => 'Consulta existosa', 'data' => $proveedores]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['message' => $e->getMessage()], 401);
         }
-
-        $proveedores = Proveedores::find($id);
-        if ($proveedores == null) {
-            return response()->json(['message' => 'Proveedor no encontrado'], 400);
-        }
-
-        // Registrar la auditoría
-        $this->registrarAuditoria($user->email, 'Get', 'Compras', 'Consulta de un Proveedor', 'La identificación del proveedor es: ' . $proveedores->documento_identificacion);
-
-        return response()->json(['message' => 'Consulta existosa', 'data' => $proveedores]);
     }
 
     /**
@@ -87,64 +87,81 @@ class ProveedoresController extends Controller
      */
     public function update(Request $request, Proveedores $proveedores)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        $documentoIdentificacion = $request->documento_identificacion;
-
-        if ($documentoIdentificacion !== $proveedores->documento_identificacion) {
-            $existeProveedor = Proveedores::where('documento_identificacion', $documentoIdentificacion)->exists();
-            if ($existeProveedor) {
-                return response()->json(['message' => 'Ya existe un proveedor con ese documento de identificacion'], 400);
+        try {
+            $user = $this->verificarToken($request);
+            $documentoIdentificacion = $request->documento_identificacion;
+            if ($documentoIdentificacion !== $proveedores->documento_identificacion) {
+                $existeProveedor = Proveedores::where('documento_identificacion', $documentoIdentificacion)->exists();
+                if ($existeProveedor) {
+                    return response()->json(['message' => 'Ya existe un proveedor con ese documento de identificacion'], 400);
+                }
             }
-        }
 
-        $email = $request->email;
-
-        if ($email !== $proveedores->email) {
-            $existeEmail = Proveedores::where('email', $email)->exists();
-            if ($existeEmail) {
-                return response()->json(['message' => 'Ya existe un proveedor con ese email'], 400);
+            $email = $request->email;
+            if ($email !== $proveedores->email) {
+                $existeEmail = Proveedores::where('email', $email)->exists();
+                if ($existeEmail) {
+                    return response()->json(['message' => 'Ya existe un proveedor con ese email'], 400);
+                }
             }
-        }
 
-        $proveedores = $this->obtenerDatos($request, $proveedores);
-        $updated = $proveedores->save();
-
-        if ($updated) {
-            $statusCode = $proveedores->wasRecentlyCreated ? 201 : 200;
-
-            // Registrar la auditoría
-            $this->registrarAuditoria($user->email, "Update", 'Compras', 'Actualizar un Proveedor', 'La identificación del proveedor es: ' . $request->documento_identificacion);
-
-            return response(['message' => 'Proveedor Actualizado Exitosamente', 'data' => $proveedores], $statusCode);
-        } else {
-            return response()->json(['message' => 'No se pudo actualizar el proveedor'], 409);
+            $proveedores = $this->obtenerDatos($request, $proveedores);
+            $updated = $proveedores->save();
+            if ($updated) {
+                $statusCode = $proveedores->wasRecentlyCreated ? 201 : 200;
+                // Registrar la auditoría
+                $this->registrarAuditoria($user->email, "Update", 'Compras', 'Actualizar un Proveedor', 'La identificación del proveedor es: ' . $request->documento_identificacion);
+                return response(['message' => 'Proveedor Actualizado Exitosamente', 'data' => $proveedores], $statusCode);
+            } else {
+                return response()->json(['message' => 'No se pudo actualizar el proveedor'], 409);
+            }
+        } catch (AuthorizationException $e) {
+            return response()->json(['message' => $e->getMessage()], 401);
         }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+        try {
+            $user = $this->verificarToken($request);
+            $proveedor = Proveedores::find($id);
+            if ($proveedor == null) {
+                return response()->json(['message' => 'Proveedor no encontrado'], 404);
+            }
+            $tieneFacturas = $proveedor->facturas()->exists();
+            if ($tieneFacturas) {
+                return response()->json(['message' => 'No se puede eliminar el proveedor porque tiene facturas asociadas'], 409);
+            }
+            $proveedor->delete();
+            // Registrar la auditoría
+            $this->registrarAuditoria($user->email, "Update", 'Compras', 'Actualizar un Proveedor', 'La identificación del proveedor es: ' . $proveedor->documento_identificacion);
+            return response()->json(['message' => 'Proveedor eliminado exitosamente', 'data' => $proveedor]);
+        } catch (AuthorizationException $e) {
+            return response()->json(['message' => $e->getMessage()], 401);
         }
+    }
 
-        $proveedor = Proveedores::find($id);
-        if ($proveedor == null) {
-            return response()->json(['message' => 'Proveedor no encontrado'], 404);
+    public function cambiarEstadoProveedor(Request $request, $id)
+    {
+        try {
+            $user = $this->verificarToken($request);
+            $proveedor = Proveedores::find($id);
+            if ($proveedor == null) {
+                return response()->json(['message' => 'Proveedor no encontrado'], 404);
+            }
+            $estadoActual = $proveedor->estado;
+            $estadoNuevo = ($estadoActual === 'Activo') ? 'Inactivo' : 'Activo';
+            $proveedor->estado = $estadoNuevo;
+            $proveedor->save();
+            // Registrar la auditoría
+            $this->registrarAuditoria($user->email, "Post", 'Compras', 'Cambiar Estado Proveedor', 'Id Proveedor: ' . $id . '. : ' . $proveedor->estado);
+            return response()->json(['message' => 'Campo actualizado correctamente']);
+        } catch (AuthorizationException $e) {
+            return response()->json(['message' => $e->getMessage()], 401);
         }
-        $proveedor->delete();
-        
-        // Registrar la auditoría
-        $this->registrarAuditoria($user->email, "Update", 'Compras', 'Actualizar un Proveedor', 'La identificación del proveedor es: ' . $proveedor->documento_identificacion);
-
-        return response()->json(['message' => 'Proveedor eliminado exitosamente', 'data' => $proveedor]);
     }
 
     private function obtenerDatos(Request $request, Proveedores $proveedores = null): Proveedores
@@ -152,7 +169,6 @@ class ProveedoresController extends Controller
         if ($proveedores == null) {
             $proveedores = new Proveedores;
         }
-
         $proveedores->documento_identificacion = $request->documento_identificacion;
         $proveedores->nombre = $request->nombre;
         $proveedores->ciudad = $request->ciudad;
@@ -177,5 +193,18 @@ class ProveedoresController extends Controller
             'aud_funcionalidad' => $funcionalidad,
             'aud_observacion' => $observacion,
         ]);
+    }
+
+    private function verificarToken(Request $request)
+    {
+        $token = $request->header('Authorization');
+        if (!$token) {
+            throw new AuthorizationException('Falta el token');
+        }
+        $user = Auth::guard('api')->user();
+        if (!$user) {
+            throw new AuthorizationException('Token inválido o caducado');
+        }
+        return $user;
     }
 }
