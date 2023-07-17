@@ -9,12 +9,7 @@ use App\Models\Auditorias;
 use App\Http\Controllers\API\AuthController;
 
 class ProveedoresController extends Controller
-{
-
-    public function __construct()
-    {
-        $this->middleware('auth:api', ['except' => ['index', 'show']]);
-    }
+{    
 
     /**
      * Display a listing of the resource.
