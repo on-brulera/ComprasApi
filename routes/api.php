@@ -16,17 +16,6 @@ use App\Http\Controllers\API\AuthController;
 |
 */
 
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
-
-// Route::controller(AuthController::class)->group(function () {
-//     Route::post('login', 'login');
-//     Route::post('register', 'register');
-//     Route::post('logout', 'logout');
-//     Route::post('refresh', 'refresh');
-// });
-
 #JWT
 Route::post('/login', 'App\Http\Controllers\API\AuthController@login');
 Route::post('/register', 'App\Http\Controllers\API\AuthController@register');
@@ -37,9 +26,6 @@ Route::post('/refresh', 'App\Http\Controllers\API\AuthController@refresh');
 #PROVEEDORES - Get - Delete
 
 Route::resource('proveedores', ProveedoresController::class);
-
-#rutas personalizadas
-
 Route::post('/proveedor', 'App\Http\Controllers\ProveedoresController@store');
 Route::put('/proveedor/{proveedores}', 'App\Http\Controllers\ProveedoresController@update');
 
