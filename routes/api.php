@@ -46,3 +46,6 @@ Route::get('/detalles/{id}', 'App\Http\Controllers\DetalleFacturasController@sho
 
 #PARA AUDITORIA
 Route::get('/auditoria', 'App\Http\Controllers\AuditoriasController@index');
+
+#MODULO SEGURIDADES
+Route::post('/compras/login', 'App\Http\Controllers\SeguridadController@login');
