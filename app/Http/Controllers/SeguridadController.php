@@ -6,6 +6,7 @@ use App\Models\Auditorias;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
@@ -29,46 +30,52 @@ class SeguridadController extends Controller
         $email = $request->email;
         $password = $request->password;
 
-        #CONSULTA DE LOS PERMISOS QUE TIENE EL USUARIO
+        #VERIFICAR USUARIO LOCAL Y REMOTO
 
+        $usuario = DB::table('users')->where('email', "=", $email)->get();
         $tokenSeguridad = $this->obtenerTokenSeguridad();
+        $permisos = [["1" => "Facturas"], ["2" => "Proveedores"], ["3" => "Auditoría"]];
 
-        $seguridades = $this->consultaPermisoSeguridad($email, $password);
+        if ($usuario->isEmpty()) {
+            $usuario = $this->obtenerUsuarioSeguridad($tokenSeguridad, $email);
+            if (isset($usuario['detail'])) {
+                return response()->json(['message' => 'El usuario no se encuentra en la BDD del módulo de seguridades'], 404);
+            }
+            $registrarUser = $this->registrarUsuarioCompras($usuario['usr_full_name'], $usuario['usr_email'], $usuario['usr_id'], $usuario['usr_password']);
+            if (!$registrarUser) {
+                return response()->json(['message' => 'No se pudo registrar el usuario en la BDD compras'], 404);
+            }
+            $permisos = $this->obtenerPermisosSeguridad($tokenSeguridad, $email, $password);
+        }
 
-        
-
-        $usuario = [
-            "id" => $seguridades['usuario']['usr_id'],
-            "name" => $seguridades['usuario']['usr_full_name'],
-            "email" => $seguridades['usuario']['usr_email']
-        ];
-
-        #OBTENER TOKEN PARA COMPRAS
-
-        $token = $this->obtenerToken();
-
-        return response()->json(['usuario' => $usuario, 'permisos' => $seguridades['permisos'], "token" => $token]);
+        $tokenCompras = $this->obtenerTokenCompras($email, $password);
+        $this->registrarAuditoria($email, "Login", "Compras", "Ingreso al sistema del Modulo Compras", "Nombre usuario: " . $tokenCompras['user']['name']);
+        $tokenCompras['permisos'] = $permisos;
+        return response()->json($tokenCompras);
     }
 
-    private function consultaPermisoSeguridad($email, $password)
+    private function obtenerPermisosSeguridad($token, $email, $password)
     {
-        $moduleName = 'Compras';
+        $usuario = str_replace(strstr($email, '@'), '', $email);
+        $permisos = Http::withToken($token['access_token'])
+            ->get('http://20.163.192.189:8080/api/login', [
+                'user_username' => $usuario,
+                'user_password' => $password,
+                'mod_name' => 'Compras',
+            ]);
+        return $permisos->json();
+    }
+
+    private function obtenerUsuarioSeguridad($token, $email)
+    {
         $token = $this->obtenerTokenSeguridad();
-        $url = "http://20.163.192.189:8080/api/user_email/lhramirezm@utn.edu.ec";
         $url = "http://20.163.192.189:8080/api/user_email/" . urlencode($email);
 
         $usuario = Http::withToken($token['access_token'])
             ->get($url);
-
-        $permisos = Http::withToken($token['access_token'])
-            ->get('http://20.163.192.189:8080/api/login', [
-                'user_username' => $usuario['usr_user'],
-                'user_password' => $password,
-                'mod_name' => $moduleName,
-            ]);
-
-        return ["usuario" => $usuario->json(), "permisos" => $permisos->json()];
+        return $usuario->json();
     }
+
 
     private function obtenerTokenSeguridad()
     {
@@ -80,26 +87,36 @@ class SeguridadController extends Controller
     }
 
 
-    public function obtenerToken()
+    public function registrarUsuarioCompras($name, $email, $identificacion, $password)
     {
         $credentials = [
-            'email' => 'lhramirezm@utn.edu.ec',
-            'password' => 'password'
+            'name' => $name,
+            'identificacion' => $identificacion,
+            'email' => $email,
+            'password' => $password,
+        ];
+        $response = Http::post('https://compras-api-2wmv.onrender.com/api/register', $credentials);
+        print_r("PASOOO");
+        if ($response->status() === 200) {
+            return true;
+        }
+        return null;
+    }
+
+    public function obtenerTokenCompras($email, $password)
+    {
+        $credentials = [
+            'email' => $email,
+            'password' => $password
         ];
 
         $response = Http::post('https://compras-api-2wmv.onrender.com/api/login', $credentials);
-        // $response = Http::post('http://127.0.0.1:8000/api/login', $credentials);
 
         if ($response->status() === 200) {
-            $responseData = $response->json();
-
-            if (isset($responseData['authorization']['token'])) {
-                $token = $responseData['authorization']['token'];
-                return $token;
-            }
+            return $response->json();
         }
 
-        return null; // Si no se pudo obtener el token, retorna null o maneja el error de acuerdo a tus necesidades.
+        return null;
     }
 
     private function registrarAuditoria($usuario, $accion, $modulo, $funcionalidad, $observacion)
