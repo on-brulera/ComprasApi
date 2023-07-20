@@ -95,8 +95,7 @@ class SeguridadController extends Controller
             'email' => $email,
             'password' => $password,
         ];
-        $response = Http::post('https://compras-api-2wmv.onrender.com/api/register', $credentials);
-        print_r("PASOOO");
+        $response = Http::post('https://compras-api-2wmv.onrender.com/api/register', $credentials);        
         if ($response->status() === 200) {
             return true;
         }
