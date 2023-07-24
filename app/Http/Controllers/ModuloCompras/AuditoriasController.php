@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ModuloCompras;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\TokenTrait;
 use App\Models\Auditorias;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 
 class AuditoriasController extends Controller
 {
+
+    use TokenTrait;
 
     /**
      * Display a listing of the resource.
@@ -31,38 +34,6 @@ class AuditoriasController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Auditorias $auditorias)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Auditorias $auditorias)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Auditorias $auditorias)
-    {
-        //
-    }
-
-    /**
      * Registrar una entrada en la tabla de auditoría.
      */
     private function registrarAuditoria($usuario, $accion, $modulo, $funcionalidad, $observacion)
@@ -75,18 +46,5 @@ class AuditoriasController extends Controller
             'aud_funcionalidad' => $funcionalidad,
             'aud_observacion' => $observacion,
         ]);
-    }
-
-    private function verificarToken(Request $request)
-    {
-        $token = $request->header('Authorization');
-        if (!$token) {
-            throw new AuthorizationException('Falta el token');
-        }
-        $user = Auth::guard('api')->user();
-        if (!$user) {
-            throw new AuthorizationException('Token inválido o caducado');
-        }
-        return $user;
-    }
+    }    
 }
