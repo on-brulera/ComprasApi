@@ -8,7 +8,7 @@ trait UserTrait
 {
     public function registerUser($name, $identificacion, $email, $password)
     {
-        $user = User::create([
+        $user = User::firstOrCreate([
             'name' => $name,
             'identificacion' => $identificacion,
             'email' => $email,
