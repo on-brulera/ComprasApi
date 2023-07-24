@@ -2,7 +2,7 @@
 
 ### Instalación del proyecto
 
-php composer install
+composer install
 
 ### Ejecucion local del proyeto
 
