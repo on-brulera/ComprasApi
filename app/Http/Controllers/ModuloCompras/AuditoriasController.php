@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\ModuloCompras;
 
+use App\Http\Controllers\Controller;
 use App\Models\Auditorias;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;

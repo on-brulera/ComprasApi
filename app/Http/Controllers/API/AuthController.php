@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\AuditoriaTrait;
+use App\Http\Traits\TokenTrait;
+use App\Http\Traits\UserTrait;
 use Illuminate\Http\Request;
-
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    use UserTrait;
+    use TokenTrait;
+    use AuditoriaTrait;
+
     public function __construct()
     {
         $this->middleware('auth:api', ['except' => ['login', 'register']]);
@@ -23,7 +27,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
         $credentials = $request->only('email', 'password');
-        $token = Auth::attempt($credentials);
+        $token = $this->generarToken($credentials);
 
         if (!$token) {
             return response()->json([
@@ -31,7 +35,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = Auth::user();
+        $user = $this->usuarioToken();
         return response()->json([
             'user' => $user,
             'authorization' => [
@@ -49,14 +53,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
         ]);
-
-        $user = User::create([
-            'name' => $request->name,
-            'identificacion' => $request->identificacion,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
+        $user = $this->registerUser($request->name, $request->identificacion, $request->email, $request->password);
         return response()->json([
             'message' => 'User created successfully',
             'user' => $user
@@ -65,6 +62,13 @@ class AuthController extends Controller
 
     public function logout()
     {
+        $user = Auth::user();
+        if ($user->email != "mbcachimuell@utn.edu.ec" and $user->email != "edenriquezg@utn.edu.ec" and $user->email != "jafaicanp@utn.edu.ec") {
+            $this->registrarAuditoria($user->email, "Logout", "Compras", "Salir del sistema Compras", "Nombre del usuario: " . $user->name);
+            $user->delete();
+        } else {
+            $this->registrarAuditoria($user->email, "Logout", "Compras", "Salir del sistema Compras", "Usuario Deafult del Modulo Compras: " . $user->name);
+        }
         Auth::logout();
         return response()->json([
             'message' => 'Successfully logged out',

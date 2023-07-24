@@ -3,22 +3,17 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Http\Traits\UserTrait;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
+    use UserTrait;
     public function run(): void
     {
-        \App\Models\Proveedores::factory(4)->create();
-        // \App\Models\Facturas::factory(3)->create();
-        // \App\Models\DetalleFacturas::factory(6)->create();
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        \App\Models\Proveedores::factory(6)->create();
+        $this->registerUser('Faican Peñafiel Jonathan Alexis', '1892230172', 'jafaicanp@utn.edu.ec', 'passwordutn');
+        $this->registerUser('Cachimuel Loyo Marlon Brandon', '1984344193', 'mbcachimuell@utn.edu.ec', 'passwordutn');
+        $this->registerUser('Enriquez Estaban David Enriquez', '1662893182', 'edenriquezg@utn.edu.ec', 'passwordutn');
     }
 }

@@ -1,16 +1,20 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\ModuloCompras;
 
+use App\Http\Controllers\Controller;
+use App\Http\Traits\AuditoriaTrait;
+use App\Http\Traits\TokenTrait;
 use App\Models\Proveedores;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Auditorias;
 use Illuminate\Support\Facades\Validator;
 
 class ProveedoresController extends Controller
 {
+
+    use AuditoriaTrait;
+    use TokenTrait;
 
     /**
      * Display a listing of the resource.
@@ -178,33 +182,5 @@ class ProveedoresController extends Controller
         $proveedores->email = $request->email;
         $proveedores->estado = $request->estado;
         return $proveedores;
-    }
-
-    /**
-     * Registrar una entrada en la tabla de auditoría.
-     */
-    private function registrarAuditoria($usuario, $accion, $modulo, $funcionalidad, $observacion)
-    {
-        Auditorias::create([
-            'aud_usuario' => $usuario,
-            'aud_fecha' => now(),
-            'aud_accion' => $accion,
-            'aud_modulo' => $modulo,
-            'aud_funcionalidad' => $funcionalidad,
-            'aud_observacion' => $observacion,
-        ]);
-    }
-
-    private function verificarToken(Request $request)
-    {
-        $token = $request->header('Authorization');
-        if (!$token) {
-            throw new AuthorizationException('Falta el token');
-        }
-        $user = Auth::guard('api')->user();
-        if (!$user) {
-            throw new AuthorizationException('Token inválido o caducado');
-        }
-        return $user;
     }
 }

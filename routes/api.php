@@ -1,9 +1,7 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProveedoresController;
-use App\Http\Controllers\API\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,35 +15,37 @@ use App\Http\Controllers\API\AuthController;
 */
 
 #JWT
+
 Route::post('/login', 'App\Http\Controllers\API\AuthController@login');
 Route::post('/register', 'App\Http\Controllers\API\AuthController@register');
 Route::post('/logout', 'App\Http\Controllers\API\AuthController@logout');
 Route::post('/refresh', 'App\Http\Controllers\API\AuthController@refresh');
 
 
-#PROVEEDORES - Get - Delete
+#PROVEEDORES
 
-Route::resource('proveedores', ProveedoresController::class);
-Route::post('/proveedor', 'App\Http\Controllers\ProveedoresController@store');
-Route::put('/proveedor/{proveedores}', 'App\Http\Controllers\ProveedoresController@update');
-Route::post('/proveedor/estado/{id}', 'App\Http\Controllers\ProveedoresController@cambiarEstadoProveedor');
+Route::get('/proveedores', 'App\Http\Controllers\ModuloCompras\ProveedoresController@index');
+Route::get('/proveedores/{id}', 'App\Http\Controllers\ModuloCompras\ProveedoresController@show');
+Route::post('/proveedor', 'App\Http\Controllers\ModuloCompras\ProveedoresController@store');
+Route::put('/proveedor/{proveedores}', 'App\Http\Controllers\ModuloCompras\ProveedoresController@update');
+Route::post('/proveedor/estado/{id}', 'App\Http\Controllers\ModuloCompras\ProveedoresController@cambiarEstadoProveedor');
 
 #FACTURAS
 
-Route::get('/facturas', 'App\Http\Controllers\FacturasController@index');
-Route::get('/factura/{id}', 'App\Http\Controllers\FacturasController@show');
-Route::post('/factura', 'App\Http\Controllers\FacturasController@store');
-Route::delete('/factura/{id}', 'App\Http\Controllers\FacturasController@destroy');
-Route::put('/factura/{facturas}', 'App\Http\Controllers\FacturasController@update');
-Route::post('/factura/estado/{id}', 'App\Http\Controllers\FacturasController@cambiarEstadoFactura');
+Route::get('/facturas', 'App\Http\Controllers\ModuloCompras\FacturasController@index');
+Route::get('/factura/{id}', 'App\Http\Controllers\ModuloCompras\FacturasController@show');
+Route::post('/factura', 'App\Http\Controllers\ModuloCompras\FacturasController@store');
+Route::delete('/factura/{id}', 'App\Http\Controllers\ModuloCompras\FacturasController@destroy');
+Route::put('/factura/{facturas}', 'App\Http\Controllers\ModuloCompras\FacturasController@update');
+Route::post('/factura/estado/{id}', 'App\Http\Controllers\ModuloCompras\FacturasController@cambiarEstadoFactura');
 
-#DETALLES para Franco
+#DETALLES
 
-Route::get('/detalles', 'App\Http\Controllers\DetalleFacturasController@index');
-Route::get('/detalles/{id}', 'App\Http\Controllers\DetalleFacturasController@show');
+Route::get('/detalles', 'App\Http\Controllers\ModuloCompras\DetalleFacturasController@index');
+Route::get('/detalles/{id}', 'App\Http\Controllers\ModuloCompras\DetalleFacturasController@show');
 
-#PARA AUDITORIA
-Route::get('/auditoria', 'App\Http\Controllers\AuditoriasController@index');
+#AUDITORIA
+Route::get('/auditoria', 'App\Http\Controllers\ModuloCompras\AuditoriasController@index');
 
-#MODULO SEGURIDADES
-Route::post('/compras/login', 'App\Http\Controllers\SeguridadController@login');
+#SEGURIDADES
+Route::post('/compras/login', 'App\Http\Controllers\ModuloSeguridad\SeguridadController@login');

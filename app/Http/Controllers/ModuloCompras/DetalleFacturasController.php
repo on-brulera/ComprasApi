@@ -1,15 +1,19 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\ModuloCompras;
 
+use App\Http\Controllers\Controller;
+use App\Http\Traits\AuditoriaTrait;
+use App\Http\Traits\TokenTrait;
 use App\Models\DetalleFacturas;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Auditorias;
 
 class DetalleFacturasController extends Controller
 {
+
+    use AuditoriaTrait;
+    use TokenTrait;
 
     /**
      * Display a listing of the resource.
@@ -28,14 +32,6 @@ class DetalleFacturasController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
      * Display the specified resource.
      */
     public function show(Request $request, $id)
@@ -49,45 +45,5 @@ class DetalleFacturasController extends Controller
         } catch (AuthorizationException $e) {
             return response()->json(['message' => $e->getMessage()], 401);
         }
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, DetalleFacturas $detalleFacturas)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(DetalleFacturas $detalleFacturas)
-    {
-        //
-    }
-
-    private function registrarAuditoria($usuario, $accion, $modulo, $funcionalidad, $observacion)
-    {
-        Auditorias::create([
-            'aud_usuario' => $usuario,
-            'aud_fecha' => now(),
-            'aud_accion' => $accion,
-            'aud_modulo' => $modulo,
-            'aud_funcionalidad' => $funcionalidad,
-            'aud_observacion' => $observacion,
-        ]);
-    }
-    private function verificarToken(Request $request)
-    {
-        $token = $request->header('Authorization');
-        if (!$token) {
-            throw new AuthorizationException('Falta el token');
-        }
-        $user = Auth::guard('api')->user();
-        if (!$user) {
-            throw new AuthorizationException('Token inválido o caducado');
-        }
-        return $user;
     }
 }
