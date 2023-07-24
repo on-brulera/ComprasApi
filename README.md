@@ -1,9 +1,9 @@
-## API DEL MÓDULO COMPRAS
+# API DEL MÓDULO COMPRAS
 
-# Instalación del proyecto
+### Instalación del proyecto
 
 php composer install
 
-# Ejecucion local del proyeto
+### Ejecucion local del proyeto
 
 php artisan serve
