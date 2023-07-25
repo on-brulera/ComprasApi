@@ -24,9 +24,9 @@ Route::post('/refresh', 'App\Http\Controllers\API\AuthController@refresh');
 
 #PROVEEDORES
 
-Route::post('/proveedores', 'App\Http\Controllers\ModuloCompras\ProveedoresController@index');
+Route::get('/proveedores', 'App\Http\Controllers\ModuloCompras\ProveedoresController@index');
 Route::post('/proveedores/{id}', 'App\Http\Controllers\ModuloCompras\ProveedoresController@show');
-Route::post('/proveedor', 'App\Http\Controllers\ModuloCompras\ProveedoresController@store');
+Route::post('/proveedores', 'App\Http\Controllers\ModuloCompras\ProveedoresController@store');
 Route::put('/proveedor/{proveedores}', 'App\Http\Controllers\ModuloCompras\ProveedoresController@update');
 Route::post('/proveedor/estado/{id}', 'App\Http\Controllers\ModuloCompras\ProveedoresController@cambiarEstadoProveedor');
 
