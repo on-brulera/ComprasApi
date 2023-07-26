@@ -9,6 +9,7 @@ trait dafaultDataTrait
 {
     use TokenTrait;
     use AuditoriaTrait;
+    use InventarioTrait;
     public function verificarUserDefault($email, $password)
     {
         $emailsPermitidos = ["edenriquezg@utn.edu.ec", "jafaicanp@utn.edu.ec", "mbcachimuell@utn.edu.ec"];
@@ -20,13 +21,15 @@ trait dafaultDataTrait
         $token = $this->generarToken(['email' => $email, 'password' => $password]);
         $usuario = $this->usuarioToken();
         $this->registrarAuditoria($email, "Login", "Compras", "Ingreso al sistema del Modulo Compras", "Nombre usuario: " . "Usuario default del modulo Compras: " . $usuario->name);
+        $tokenInventario = $this->obtenerTokenInventario();
         return response()->json([
             'user' => $usuario,
             'permisos' => $this->obtenerPermisos($email),
             'authorization' => [
                 'token' => $token,
                 'type' => 'bearer',
-            ]
+            ],
+            'tokenInventario' => $tokenInventario['token']
         ]);
     }
 
